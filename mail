@@ -1,0 +1,16 @@
+#!/bin/bash
+login=$1
+pass=$2
+apt install libsasl2-modules -y
+main=/etc/postfix/main.cf
+sed '/relayhost =/d' $main > $main
+echo "relayhost = [smtp.gmail.com]:587" >> $main
+echo "smtp_use_tls = yes" >> $main
+echo "smtp_sasl_auth_enable = yes" >> $main
+echo "smtp_sasl_security_options =noanonymous" >> $main
+echo "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd" >> $main
+echo "smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt" >> $main
+echo "[smtp.gmail.com]:587 " $login":"$pass >> /etc/postfix/sasl_passwd
+/usr/sbin/postmap /etc/postfix/sasl_passwd
+service postfix restart
+echo "sample message" | mail -s "sample subject" $login
